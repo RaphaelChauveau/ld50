@@ -39,11 +39,11 @@ export default class Player {
 
     this._timeSinceAnimation = 0;
     this._idleAnimationDuration = 1000;
-    this._walkAnimationDuration = 1000;
+    this._walkAnimationDuration = 400;
     this._crouchAnimationDuration = 1000;
-    this._jumpAnimationDuration = 1000;
-    this._fallAnimationDuration = 1000;
-    this._dashAnimationDuration = 1000;
+    this._jumpAnimationDuration = 200;
+    this._fallAnimationDuration = 200;
+    this._dashAnimationDuration = 200;
   }
 
   getHitboxFromPosition = ([x, y]) => {
@@ -83,7 +83,6 @@ export default class Player {
     // update timings
     this._timeSinceAnimation += delta;
     this._dashingSince += delta;
-
     this._bufferedActionSince += delta;
 
     //hzInput
@@ -304,57 +303,52 @@ export default class Player {
         this._idleAnimationDuration,
         this._timeSinceAnimation,
         dif(this.position, [80, 32]),
-        80,
-        80,
-        2
+        160,
+        160
       );
     } else if (this.state === State.WALKING) {
       this.animate(
         scene,
         resources[`res/player_spritesheet_walk_right.png`],
-        1,
-        this._idleAnimationDuration,
+        4,
+        this._walkAnimationDuration,
         this._timeSinceAnimation,
         dif(this.position, [80, 32]),
-        80,
-        80,
-        2
+        160,
+        160
       );
     } else if (this.state === State.JUMPING) {
       this.animate(
         scene,
         resources[`res/player_spritesheet_jump_right.png`],
-        1,
-        this._idleAnimationDuration,
+        2,
+        this._jumpAnimationDuration,
         this._timeSinceAnimation,
         dif(this.position, [80, 32]),
-        80,
-        80,
-        2
+        160,
+        160
       );
     } else if (this.state === State.FALLING) {
       this.animate(
         scene,
         resources[`res/player_spritesheet_fall_right.png`],
-        1,
-        this._idleAnimationDuration,
+        2,
+        this._fallAnimationDuration,
         this._timeSinceAnimation,
         dif(this.position, [80, 32]),
-        80,
-        80,
-        2
+        160,
+        160
       );
     } else if (this.state === State.DASHING) {
       this.animate(
         scene,
         resources[`res/player_spritesheet_dash_right.png`],
-        1,
-        this._idleAnimationDuration,
+        2,
+        this._dashAnimationDuration,
         this._timeSinceAnimation,
         dif(this.position, [80, 32]),
-        80,
-        80,
-        2
+        160,
+        160
       );
     }
 

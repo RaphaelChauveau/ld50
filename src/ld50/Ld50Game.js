@@ -38,6 +38,7 @@ export class Ld50Game extends Game {
 
     // environment
     this.loadImage("res/tree_1.png");
+    this.loadImage("res/backdrop.png");
 
     // sounds
     load("res/Hibou.ogg");
@@ -59,7 +60,7 @@ export class Ld50Game extends Game {
 
     this.colliders = [];
 
-    this.addCollider(0, 550, 10000, 10);
+    this.addCollider(0, 550, 100_000, 10);
     this.addCollider(0, 0, 50, 550);
     this.addCollider(435, 418, 100, 100);
 
@@ -71,10 +72,17 @@ export class Ld50Game extends Game {
   }
 
   draw = (scene) => {
+      scene.setCenterPosition(400, 300);
+      scene.ctx.drawImage(
+        this.resources["res/backdrop.png"].value,
+        0,
+        0
+      );
+
+      scene.setCenterPosition(Math.round(this.player.position[0]), 300);
       for (const entity of this.entities) {
           entity.draw(scene, this.resources);
       }
       this.player.draw(scene, this.resources);
-    // scene.setCenterPosition(Math.round(this.player.position[0]), Math.round(this.player.position[1]));
   };
 }
