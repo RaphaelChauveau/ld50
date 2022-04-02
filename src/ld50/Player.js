@@ -1,5 +1,5 @@
 import Rect from "./Rect.js";
-import { sum, mul } from "../engine/vector2.js";
+import { dif, mul, sum } from "../engine/vector2.js";
 
 const State = {
   DASHING: "DASHING",
@@ -36,6 +36,14 @@ export default class Player {
     this.walkVelocity = 300;
     this.gravity = 1400; // per sec
     this.maxVerticalVelocity = 5000; // per sec
+
+    this._timeSinceAnimation = 0;
+    this._idleAnimationDuration = 1000;
+    this._walkAnimationDuration = 1000;
+    this._crouchAnimationDuration = 1000;
+    this._jumpAnimationDuration = 1000;
+    this._fallAnimationDuration = 1000;
+    this._dashAnimationDuration = 1000;
   }
 
   getHitboxFromPosition = ([x, y]) => {
@@ -71,7 +79,7 @@ export default class Player {
     }
   };
 
-  update = (delta, inputHandler) => {
+  update = (delta, inputHandler, colliders) => {
     // update timings
     this._timeSinceAnimation += delta;
     this._dashingSince += delta;
@@ -102,10 +110,12 @@ export default class Player {
     const groundDetectionHitbox = this.getHitboxFromPosition(this.position);
     groundDetectionHitbox.y += groundDetectionHitbox.h;
     groundDetectionHitbox.h = 1;
-    const shouldBecomeGrounded =
-      groundDetectionHitbox.y + groundDetectionHitbox.h > 550; // TODO collisions, toussa
-    // const newlyGrounded = !this.isGrounded && shouldBecomeGrounded;
-    this.isGrounded = shouldBecomeGrounded;
+    this.isGrounded = false;
+    for (const collider of colliders) {
+        if (collider.hitbox.intersectsRect(groundDetectionHitbox)) {
+            this.isGrounded = true;
+        }
+    }
 
     // compute actions
     if (this._bufferedActionSince < this._bufferedActionDuration) {
@@ -156,18 +166,70 @@ export default class Player {
     }
 
     // apply movement
-    const nextPosition = sum(
+    /*const nextPosition = sum(
       this.position,
       mul([this.horizontalVelocity, this.verticalVelocity], delta / 1000)
     );
-    const nextHitbox = this.getHitboxFromPosition(nextPosition);
+    const nextHitbox = this.getHitboxFromPosition(nextPosition);*/
+
+    //hz collision TODO INVESTIGATE NOT WORKING !!!!!
+    if (this.verticalVelocity || this.horizontalVelocity) {
+      const sidePosition = sum(this.position, [
+        (this.horizontalVelocity * delta) / 1000,
+        0,
+      ]);
+      const sideHitbox = this.getHitboxFromPosition(sidePosition);
+      let sidePushBack = 0;
+      for (const collider of colliders) {
+        if (collider.hitbox.intersectsRect(sideHitbox)) {
+          const direction = sidePosition[0] - this.position[0];
+          if (direction < 0) {
+            sidePushBack = collider.hitbox.x + collider.hitbox.w - sideHitbox.x;
+          } else if (direction > 0) {
+            sidePushBack = collider.hitbox.x - (sideHitbox.x + sideHitbox.w); // TODO useless parenthesis ?
+          }
+        }
+      }
+      // vt collision
+      const vertPosition = sum(this.position, [
+        sidePushBack,
+        (this.verticalVelocity * delta) / 1000,
+      ]);
+      const vertHitbox = this.getHitboxFromPosition(vertPosition);
+      let vertPushBack = 0;
+      for (const collider of colliders) {
+        if (collider.hitbox.intersectsRect(vertHitbox)) {
+          const direction = vertPosition[1] - this.position[1];
+          if (direction < 0) {
+            vertPushBack = collider.hitbox.y + collider.hitbox.h - vertHitbox.y; // TODO useless parenthesis ?
+          } else if (direction > 0) {
+            vertPushBack = collider.hitbox.y - (vertHitbox.y + vertHitbox.h);
+          }
+        }
+      }
+      // reposition
+      this.position = sum(
+        sum(
+          this.position,
+          mul([this.horizontalVelocity, this.verticalVelocity], delta / 1000)
+        ),
+        [sidePushBack, vertPushBack]
+      );
+      this.hitbox = this.getHitboxFromPosition(this.position);
+      if (sidePushBack) {
+        this.horizontalVelocity = 0;
+      }
+      if (vertPushBack) {
+        this.verticalVelocity = 0;
+      }
+    }
 
     // TODO check for intersections
     // calculate pushback & set pos
     // pushback vers le haut => grounded
-    // OR!! maybe check separately for the two directions :o
+    // OR!! maybe check separately for the two directions :o (side then)
     // OR!! test all points between nextPosition && this.position
-    let intersects = false;
+    /*let intersects = false;
     if (nextHitbox.y + nextHitbox.h > 550) {
       // TODO use a collider for floor
       intersects = true;
@@ -177,7 +239,7 @@ export default class Player {
     if (!intersects) {
       this.position = nextPosition;
       this.hitbox = nextHitbox;
-    }
+    }*/
 
     // Set state
     const oldState = this.state;
@@ -198,6 +260,9 @@ export default class Player {
         }
       }
     }
+
+    console.log(this.state, this.isGrounded, this.horizontalVelocity, this.verticalVelocity)
+
     if (oldState !== this.state) {
       this._animatingSince = 0;
     }
@@ -211,7 +276,8 @@ export default class Player {
     timeEllapsed,
     position,
     cellWidth,
-    cellHeight
+    cellHeight,
+    zoom = 1
   ) => {
     const currentLoopSince = timeEllapsed % duration;
     const currentFrame = Math.floor(currentLoopSince / (duration / nbFrames));
@@ -224,16 +290,73 @@ export default class Player {
       cellHeight,
       position[0],
       position[1],
-      cellWidth,
-      cellHeight
+      cellWidth * zoom,
+      cellHeight * zoom
     );
   };
 
-  draw = (scene) => {
-
-    /*if ()
-    this.animate(scene, resources[`res/player_spritesheet.png`], 1, this.attackDuration,
-    this._timeSinceLastAttack, dif(this.position, [64, 96]), 128, 128);*/
+  draw = (scene, resources) => {
+    if (this.state === State.IDLE) {
+      this.animate(
+        scene,
+        resources[`res/player_spritesheet_idle_right.png`],
+        1,
+        this._idleAnimationDuration,
+        this._timeSinceAnimation,
+        dif(this.position, [80, 32]),
+        80,
+        80,
+        2
+      );
+    } else if (this.state === State.WALKING) {
+      this.animate(
+        scene,
+        resources[`res/player_spritesheet_walk_right.png`],
+        1,
+        this._idleAnimationDuration,
+        this._timeSinceAnimation,
+        dif(this.position, [80, 32]),
+        80,
+        80,
+        2
+      );
+    } else if (this.state === State.JUMPING) {
+      this.animate(
+        scene,
+        resources[`res/player_spritesheet_jump_right.png`],
+        1,
+        this._idleAnimationDuration,
+        this._timeSinceAnimation,
+        dif(this.position, [80, 32]),
+        80,
+        80,
+        2
+      );
+    } else if (this.state === State.FALLING) {
+      this.animate(
+        scene,
+        resources[`res/player_spritesheet_fall_right.png`],
+        1,
+        this._idleAnimationDuration,
+        this._timeSinceAnimation,
+        dif(this.position, [80, 32]),
+        80,
+        80,
+        2
+      );
+    } else if (this.state === State.DASHING) {
+      this.animate(
+        scene,
+        resources[`res/player_spritesheet_dash_right.png`],
+        1,
+        this._idleAnimationDuration,
+        this._timeSinceAnimation,
+        dif(this.position, [80, 32]),
+        80,
+        80,
+        2
+      );
+    }
 
     scene.ctx.beginPath();
     scene.ctx.rect(this.hitbox.x, this.hitbox.y, this.hitbox.w, this.hitbox.h);

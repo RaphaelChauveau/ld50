@@ -1,3 +1,5 @@
+const epsilon = 0.0002;
+
 export default class Rect {
   constructor(x, y, w, h) {
     this.x = x;
@@ -8,10 +10,10 @@ export default class Rect {
 
   intersectsRect = (other) => {
     return !(
-      this.x > other.x + other.w ||
-      this.y > other.y + other.h ||
-      this.x + this.w < other.x ||
-      this.y + this.h < other.y
+      this.x + epsilon > other.x + other.w ||
+      this.y + epsilon > other.y + other.h ||
+      this.x + this.w < other.x + epsilon ||
+      this.y + this.h < other.y + epsilon
     );
   };
 
