@@ -56,7 +56,7 @@ export class BoidGame extends Game {
 
   loadAssets = () => {
     this.resourceLoader = new ResourceLoader();
-    this.logoImage = this.resourceLoader.loadImage("../res/logo.png");
+    this.logoImage = this.resourceLoader.loadImage("../res/tree_1.png");
     console.log(this.logoImage);
   };
 

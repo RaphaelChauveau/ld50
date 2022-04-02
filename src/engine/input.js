@@ -1,15 +1,20 @@
 class Input {
-  constructor(canvas) {
+  constructor(game) {
+    this.game = game;
     this._keyStates = {};
     this._justUpdated = {};
     this._mousePosition = [0, 0]; // init value
-    window.addEventListener('keydown', this._handleKeyDown);
-    window.addEventListener('keyup', this._handleKeyUp);
-    canvas.addEventListener('mousemove', this._handleMouseMove);
-    canvas.addEventListener('mouseclick', this._handleMouseMove);
-    canvas.addEventListener('mousedown', this._handleMouseDown);
-    canvas.addEventListener('mouseup', this._handleMouseUp);
+    this._attachEvents();
   }
+
+  _attachEvents = () => {
+    window.addEventListener("keydown", this._handleKeyDown);
+    window.addEventListener("keyup", this._handleKeyUp);
+    this.game.canvas.addEventListener("mousemove", this._handleMouseMove);
+    this.game.canvas.addEventListener("mouseclick", this._handleMouseMove);
+    this.game.canvas.addEventListener("mousedown", this._handleMouseDown);
+    this.game.canvas.addEventListener("mouseup", this._handleMouseUp);
+  };
 
   _handleMouseDown = (e) => {
     // TODO copied from _handleKeyDown (ughhh)
@@ -52,7 +57,11 @@ class Input {
   };
 
   _handleMouseMove = (e) => {
-    this._mousePosition = [e.offsetX, e.offsetY];
+    console.log('MOUSE MOVE', e.offsetX, this.game.displayRatio, e.offsetX / this.game.displayRatio)
+    this._mousePosition = [
+      e.offsetX / this.game.displayRatio,
+      e.offsetY / this.game.displayRatio,
+    ];
   };
 
   newFrame = () => {
@@ -78,7 +87,7 @@ class Input {
 
   getMousePosition = () => {
     return this._mousePosition;
-  }
+  };
 
   // TODO mouse clicks
 }

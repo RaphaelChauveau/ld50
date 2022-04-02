@@ -1,22 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+<DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html" lang="en">
 
-</head>
-<body>
-<style>
-        body {
-            margin: 0;
-        }
-        canvas {
-            /* border: 1px solid; */
-        }
-    </style>
-    <canvas id="canvas" width="800" height="600">
-      UPDATE UR BROWSER
-    </canvas>
-    <script type="module" src="src/index.js"></script>
-</body>
+    <head>
+        <meta charset="UTF-8">
+        <title>Title</title>
+
+        <style>
+            body {
+                height: 100vh;
+                margin: 0;
+                overflow: hidden;
+            }
+
+            #wrapper {
+                background-color: black;
+                width: 100%;
+                height: 100%;
+            }
+
+            #display {
+                /* border: 1px solid; */
+                transform-origin: top left;
+
+                /* image-rendering: pixelated;
+                image-rendering: crisp-edges; */ /* FF */
+            }
+
+            #debug {
+                /*visibility: hidden;*/
+                pointer-events: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                border: 1px solid;
+                color: #FFF;
+            }
+        </style>
+    </head>
+
+    <body>
+        <script>
+            const GAME_WIDTH = 800;
+            const GAME_HEIGHT = 600;
+        </script>
+
+        <div id="wrapper">
+            <canvas id="display" width="800" height="600">
+                Monkeee
+            </canvas>
+        </div>
+
+        <div id="debug">
+            -----debug-----
+            <br>
+            <span id="mouse-x"></span>
+            <br>
+            <span id="mouse-y"></span>
+            <script>
+                document.getElementById('display').onmousemove = (e) => {
+                    const canvas = document.getElementById('display');
+                    document.getElementById('mouse-x').innerText = (e.offsetX / canvas.offsetWidth * GAME_WIDTH).toString();
+                    document.getElementById('mouse-y').innerText = (e.offsetY / canvas.offsetHeight * GAME_HEIGHT).toString();
+                }
+            </script>
+        </div>
+
+        <script type="module" src="src/index.js"></script>
+    </body>
+
 </html>

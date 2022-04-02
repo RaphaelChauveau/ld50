@@ -1,6 +1,5 @@
-import Scene from './scene.js';
+import Scene from "./scene.js";
 import Input from "./input.js";
-
 
 const MILLISECOND_PER_SECOND = 1000;
 
@@ -8,23 +7,28 @@ class Game {
   constructor(canvas) {
     // TODO watch canvas resize
     this.canvas = canvas;
-    this.displayWidth = canvas.width;
-    this.displayHeight = canvas.height;
+    // this.displayWidth = canvas.width;
+    // this.displayHeight = canvas.height;
+    this.gameWidth = canvas.width;
+    this.gameHeight = canvas.height;
+    this.displayRatio = 1;
 
     this.updatePerSecond = 120;
     this.drawPerSecond = 30;
 
-    this.ctx = this.canvas.getContext('2d');
+    this.ctx = this.canvas.getContext("2d");
     // this.camera = new Camera(ctx, 0, this.displayWidth, this.displayHeight);
+
+    this.inputHandler = new Input(this);
 
     this._scene = new Scene(this.canvas);
     this._updateInterval = null;
     this._drawInterval = null;
     this._lastUpdateTime = null;
-  };
+  }
 
   run = () => {
-    this.inputHandler = new Input(this.canvas);
+    this.inputHandler = new Input(this);
     this.loadAssets();
 
     this._lastUpdateTime = new Date();
@@ -45,15 +49,17 @@ class Game {
     this.inputHandler.clean();
   };
 
-  // TODO override
-  loadAssets = () => {
-
+  onWindowResized = (width, height, displayRatio) => {
+    this.gameWidth = width;
+    this.gameHeight = height;
+    this.displayRatio = displayRatio;
   };
 
   // TODO override
-  unloadAssets = () => {
+  loadAssets = () => {};
 
-  };
+  // TODO override
+  unloadAssets = () => {};
 
   _basicUpdate = () => {
     const now = new Date();
@@ -65,20 +71,16 @@ class Game {
   };
 
   // TODO override
-  update = (delta) => {
-
-  };
+  update = (delta) => {};
 
   _basicDraw = () => {
     this._scene.drawBegin();
     this.draw(this._scene);
-    this._scene.drawEnd()
+    this._scene.drawEnd();
   };
 
   // TODO override
-  draw = (scene) => {
-
-  };
+  draw = (scene) => {};
 }
 
 export default Game;
