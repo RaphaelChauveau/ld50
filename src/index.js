@@ -1,11 +1,11 @@
 "use strict";
 
-import { BoidGame } from "./test_boids/BoidGame.js";
+import { Ld50Game } from "./ld50/Ld50Game.js";
 
 console.log("APP");
 const canvas = document.getElementById("display");
 console.log("CANVAS", canvas);
-const game = new BoidGame(canvas);
+const game = new Ld50Game(canvas);
 console.log("GAME", game);
 game.run();
 

@@ -57,7 +57,6 @@ class Input {
   };
 
   _handleMouseMove = (e) => {
-    console.log('MOUSE MOVE', e.offsetX, this.game.displayRatio, e.offsetX / this.game.displayRatio)
     this._mousePosition = [
       e.offsetX / this.game.displayRatio,
       e.offsetY / this.game.displayRatio,
