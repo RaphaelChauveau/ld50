@@ -13,7 +13,6 @@ export default class Collider {
     }
 
     destruct = () => {
-        console.log('DESTRUCT');
         if (this.isDestructible) {
             this.enabled = false;
         }

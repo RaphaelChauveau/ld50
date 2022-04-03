@@ -63,6 +63,13 @@ export class Ld50Game extends Game {
 
     // sounds
     load("res/Hibou.ogg");
+
+    load("res/break.ogg");
+    load("res/dash.ogg");
+    load("res/game_over.ogg");
+    load("res/hourglass.ogg");
+    load("res/jump.ogg");
+    load("res/start.ogg");
   };
 
   loadImage = (path) => {
@@ -99,25 +106,22 @@ export class Ld50Game extends Game {
     this.scroller2 = new Scroller(0.5);
     this.scroller3 = new Scroller(1);
 
-    // this.hourglass = new Hourglass([700, 200], this);
-    // this.addHourglass(700, 200);
-
-    this.addCollider(0, 550, 100_000_000, 10);
+    this.addCollider(0, 550, 100_000_000, 1000);
 
     this.addPattern(0, ['M','M','M','M','M','M','M','M',])
-
-    //this.addPattern(700);
-
-    // this.initEnvironment();
   };
 
   collectHourglass = (hourglass) => {
     this.levelStartedSince -= this.hourglassTimeGiven;
     this.levelStartedSince = Math.max(0, this.levelStartedSince);
     this.score += this.hourglassTimeGiven / 1000;
+    play('res/hourglass.ogg');
   };
 
   update = (delta) => {
+    if (this.state === GameState.PLAYING && this.levelStartedSince === 0) {
+      play('res/start.ogg');
+    }
     if (
       this.state === GameState.PLAYING ||
       this.state === GameState.GAME_OVER
@@ -135,6 +139,7 @@ export class Ld50Game extends Game {
           this.levelStartedSince
         );
         if (this.levelStartedSince >= this.levelDuration) {
+          play('res/game_over.ogg');
           this.player.die();
           this.state = GameState.GAME_OVER;
 
@@ -197,14 +202,20 @@ export class Ld50Game extends Game {
 
       // HUD
       scene.setCenterPosition(400, 300);
+      if (this.state === GameState.PLAYING) {
+        scene.ctx.font = "40px Arial Black";
+        scene.ctx.fillStyle = "black";
+        scene.ctx.textAlign = "center";
+        scene.ctx.fillText(`score: ${this.score}`, 625, 40);
+      }
       if (this.state === GameState.GAME_OVER) {
         scene.ctx.font = "60px Arial Black";
         scene.ctx.fillStyle = "black";
         scene.ctx.textAlign = "center";
         scene.ctx.fillText(`Press Enter to restart`, 400, 400);
+        scene.ctx.fillText(`Oh, you failed...`, 400, 80);
 
         scene.ctx.font = "40px Arial Black";
-        scene.ctx.fillText(`The sun rose :(`, 400, 80);
         scene.ctx.fillText(`Your score : ${this.score}`, 400, 180);
         scene.ctx.fillText(`Highscore : ${this.highscore}`, 400, 240);
 
@@ -231,7 +242,6 @@ export class Ld50Game extends Game {
   addPattern = (x, patternOverride) => {
     let randomIndex = Math.floor(Math.random() * this.patterns.length);
     //randomIndex = 0;
-    console.log('Add pattern', randomIndex);
     let pattern = patternOverride || this.patterns[randomIndex];
     /*pattern = [
         "........",

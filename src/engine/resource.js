@@ -7,7 +7,6 @@ export const LOADING_STATUS = {
 
 class Resource {
   constructor(uri) {
-    console.log('tut tut', this);
     this.uri = uri;
     this.status = LOADING_STATUS.LOADING;
     this.value = null;
@@ -15,7 +14,6 @@ class Resource {
 
   // TODO override
   loadValue = () => {
-    console.log('caca');
   };
 }
 

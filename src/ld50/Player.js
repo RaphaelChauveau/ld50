@@ -1,5 +1,6 @@
 import Rect from "./Rect.js";
 import { dif, mul, sum } from "../engine/vector2.js";
+import { play } from "../engine/sound_test/soundTest.js";
 
 const State = {
   DASHING: "DASHING",
@@ -130,21 +131,22 @@ export default class Player {
     ) {
       // try to trigger action
       if (this._bufferedActionType === "dash" && this.state !== State.DASHING) {
-        console.log("DASH");
         this._bufferedActionSince = 9999;
         this._dashingSince = 0;
+        play('res/dash.ogg');
       } else if (
         this._bufferedActionType === "jump" &&
         this.state !== State.DASHING &&
         this.isGrounded
       ) {
-        console.log("JUMP");
         this._bufferedActionSince = 9999;
 
         this.jumpPressed = inputHandler.getKey("KeyW");
         this.verticalVelocity = this.jumpPressed
           ? this.jumpVelocity
           : this.jumpVelocity / 2;
+
+        play('res/jump.ogg');
       }
     }
 
@@ -193,6 +195,7 @@ export default class Player {
               collider.isDestructible
             ) {
               collider.destruct();
+              play('res/break.ogg');
               continue;
             }
             sidePushBack = collider.hitbox.x - (sideHitbox.x + sideHitbox.w); // TODO useless parenthesis ?
@@ -342,10 +345,5 @@ export default class Player {
         160
       );
     }
-
-    scene.ctx.beginPath();
-    scene.ctx.rect(this.hitbox.x, this.hitbox.y, this.hitbox.w, this.hitbox.h);
-    scene.ctx.strokeStyle = "#FF0000";
-    scene.ctx.stroke();
   };
 }

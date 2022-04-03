@@ -32,6 +32,7 @@ const addAudioToStruct = (src) => {
 };
 
 export const load = (src) => {
+  console.log('LOAD', src);
   if (src in struct) {
     return struct[src];
   }
@@ -46,6 +47,7 @@ export const load = (src) => {
 };
 
 export const play = (src) => {
+  console.log('PLAY', src);
   if (audioContext2.state === 'suspended') {
     console.log('resume');
     audioContext2.resume();
