@@ -7,6 +7,7 @@ const State = {
   WALKING: "WALKING",
   JUMPING: "JUMPING",
   FALLING: "FALLING",
+  DEAD: "DEAD",
 };
 
 export default class Player {
@@ -16,6 +17,7 @@ export default class Player {
     this.height = 48 * 2;
     this.hitbox = this.getHitboxFromPosition(this.position);
 
+    this.isDead = false;
     this.state = State.FALLING;
     this.isGrounded = false;
     this.orientation = "right";
@@ -32,9 +34,9 @@ export default class Player {
 
     this.verticalVelocity = 0; // per sec
     this.horizontalVelocity = 0; // per sec
-    this.jumpVelocity = -700; // per sec
+    this.jumpVelocity = -800; // per sec
     this.walkVelocity = 300;
-    this.gravity = 1400; // per sec
+    this.gravity = 1600; // per sec
     this.maxVerticalVelocity = 5000; // per sec
 
     this._timeSinceAnimation = 0;
@@ -45,6 +47,11 @@ export default class Player {
     this._fallAnimationDuration = 200;
     this._dashAnimationDuration = 200;
   }
+
+  die = () => {
+    this.isDead = true;
+    this.horizontalVelocity = 0;
+  };
 
   getHitboxFromPosition = ([x, y]) => {
     return new Rect(x - this.width / 2, y, this.width, this.height);
@@ -111,13 +118,16 @@ export default class Player {
     groundDetectionHitbox.h = 1;
     this.isGrounded = false;
     for (const collider of colliders) {
-        if (collider.hitbox.intersectsRect(groundDetectionHitbox)) {
-            this.isGrounded = true;
-        }
+      if (collider.intersectsRect(groundDetectionHitbox)) {
+        this.isGrounded = true;
+      }
     }
 
     // compute actions
-    if (this._bufferedActionSince < this._bufferedActionDuration) {
+    if (
+      !this.isDead &&
+      this._bufferedActionSince < this._bufferedActionDuration
+    ) {
       // try to trigger action
       if (this._bufferedActionType === "dash" && this.state !== State.DASHING) {
         console.log("DASH");
@@ -141,11 +151,9 @@ export default class Player {
     // compute movement
     if (this._dashingSince < this.dashDuration) {
       // dashing
-      const direction = this.orientation == "right" ? 1 : -1;
-      this.horizontalVelocity = direction * this.walkVelocity * 2;
+      this.horizontalVelocity = this.walkVelocity * 2;
       this.verticalVelocity = 0;
     } else {
-      // TODO determine state
       // gravity
       if (!this.isGrounded) {
         this.verticalVelocity += (this.gravity * delta) / 1000;
@@ -154,24 +162,19 @@ export default class Player {
         }
       }
 
-      // hz mvt
-      this.horizontalVelocity = this.horizontalInput * this.walkVelocity;
-      // orientation
-      if (this.horizontalInput > 0) {
-        this.orientation = "right";
-      } else if (this.horizontalInput < 0) {
-        this.orientation = "left";
+      if (!this.isDead) {
+        // hz mvt
+        this.horizontalVelocity = this.horizontalInput * this.walkVelocity;
+        // orientation
+        if (this.horizontalInput > 0) {
+          this.orientation = "right";
+        } else if (this.horizontalInput < 0) {
+          this.orientation = "left";
+        }
       }
     }
 
-    // apply movement
-    /*const nextPosition = sum(
-      this.position,
-      mul([this.horizontalVelocity, this.verticalVelocity], delta / 1000)
-    );
-    const nextHitbox = this.getHitboxFromPosition(nextPosition);*/
-
-    //hz collision TODO INVESTIGATE NOT WORKING !!!!!
+    //hz collision
     if (this.verticalVelocity || this.horizontalVelocity) {
       const sidePosition = sum(this.position, [
         (this.horizontalVelocity * delta) / 1000,
@@ -180,11 +183,18 @@ export default class Player {
       const sideHitbox = this.getHitboxFromPosition(sidePosition);
       let sidePushBack = 0;
       for (const collider of colliders) {
-        if (collider.hitbox.intersectsRect(sideHitbox)) {
+        if (collider.intersectsRect(sideHitbox)) {
           const direction = sidePosition[0] - this.position[0];
           if (direction < 0) {
             sidePushBack = collider.hitbox.x + collider.hitbox.w - sideHitbox.x;
           } else if (direction > 0) {
+            if (
+              this._dashingSince < this.dashDuration &&
+              collider.isDestructible
+            ) {
+              collider.destruct();
+              continue;
+            }
             sidePushBack = collider.hitbox.x - (sideHitbox.x + sideHitbox.w); // TODO useless parenthesis ?
           }
         }
@@ -197,7 +207,7 @@ export default class Player {
       const vertHitbox = this.getHitboxFromPosition(vertPosition);
       let vertPushBack = 0;
       for (const collider of colliders) {
-        if (collider.hitbox.intersectsRect(vertHitbox)) {
+        if (collider.intersectsRect(vertHitbox)) {
           const direction = vertPosition[1] - this.position[1];
           if (direction < 0) {
             vertPushBack = collider.hitbox.y + collider.hitbox.h - vertHitbox.y; // TODO useless parenthesis ?
@@ -223,23 +233,6 @@ export default class Player {
       }
     }
 
-    // TODO check for intersections
-    // calculate pushback & set pos
-    // pushback vers le haut => grounded
-    // OR!! maybe check separately for the two directions :o (side then)
-    // OR!! test all points between nextPosition && this.position
-    /*let intersects = false;
-    if (nextHitbox.y + nextHitbox.h > 550) {
-      // TODO use a collider for floor
-      intersects = true;
-      this.isGrounded = true;
-      this.verticalVelocity = 0;
-    }
-    if (!intersects) {
-      this.position = nextPosition;
-      this.hitbox = nextHitbox;
-    }*/
-
     // Set state
     const oldState = this.state;
     if (this._dashingSince < this.dashDuration) {
@@ -259,8 +252,6 @@ export default class Player {
         }
       }
     }
-
-    console.log(this.state, this.isGrounded, this.horizontalVelocity, this.verticalVelocity)
 
     if (oldState !== this.state) {
       this._animatingSince = 0;
