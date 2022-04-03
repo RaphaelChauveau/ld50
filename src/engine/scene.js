@@ -46,7 +46,6 @@ class Scene {
 
   drawImage = (imageResource, x, y, w, h, x2, y2, w2, h2) => {
     // rounding for pixel perfect
-    console.log('IMAGE', imageResource);
     if (imageResource.status === 'LOADED') {
       if (x2 !== undefined) {
         this.ctx.drawImage(imageResource.value, x, y, w, h, Math.round(x2), Math.round(y2), w2, h2);
