@@ -65,7 +65,6 @@ export default class Player {
         this.horizontalInput = 0;
         if (inputHandler.getKey("KeyD")) {
           this.horizontalInput = 1;
-          //this.orientation = "right";
         }
       }
     } else if (this.horizontalInput > 0) {
@@ -74,16 +73,13 @@ export default class Player {
         this.horizontalInput = 0;
         if (inputHandler.getKey("KeyA")) {
           this.horizontalInput = -1;
-          //this.orientation = "left";
         }
       }
     }
     if (inputHandler.getKeyDown("KeyD")) {
       this.horizontalInput = 1;
-      //this.orientation = "right";
     } else if (inputHandler.getKeyDown("KeyA")) {
       this.horizontalInput = -1;
-      //this.orientation = "left";
     }
   };
 
